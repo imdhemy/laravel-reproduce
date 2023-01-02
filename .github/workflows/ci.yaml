@@ -1,0 +1,56 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+
+name: "Continuous Integration"
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  phpunit:
+    name: "PHPUnit tests"
+
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "8.1"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: "pcov"
+          php-version: "${{ matrix.php-version }}"
+          ini-values: memory_limit=-1
+          extensions: sodium, fileinfo, redis
+
+      - name: "Start MongoDB"
+        uses: supercharge/mongodb-github-action@1.8.0
+        with:
+          mongodb-version: 6.0
+          mongodb-db: test
+
+      - name: "Start Redis"
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 7.0
+
+      - name: "Install dependencies"
+        uses: "ramsey/composer-install@v2"
+        with:
+          dependency-versions: "${{ matrix.dependencies }}"
+
+      - name: "Generate openssl keys"
+        run: "sh ./bin/keypair.sh"
+
+      - name: "Tests"
+        run: "composer test"
