@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\FirstConcrete;
+use App\Console\Commands\MyCommand;
+use App\Console\Commands\MyInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->app->when(MyCommand::class)
+            ->needs(MyInterface::class)
+            ->give(FirstConcrete::class);
     }
 }
